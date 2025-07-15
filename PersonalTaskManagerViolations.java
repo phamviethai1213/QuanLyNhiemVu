@@ -103,4 +103,65 @@ public class PersonalTaskManager {
         }
         return false;
     }
+
+    /**
+     * Tạo đối tượng nhiệm vụ mới với các trường cần thiết.
+     */
+    private JSONObject buildTask(String title, String description, LocalDate dueDate, String priority) {
+        JSONObject task = new JSONObject();
+        task.put("id", generateTaskId());
+        task.put("title", title);
+        task.put("description", description);
+        task.put("due_date", dueDate.format(DATE_FORMATTER));
+        task.put("priority", priority);
+        task.put("status", "Chưa hoàn thành");
+        String now = LocalDateTime.now().format(DATE_TIME_FORMATTER);
+        task.put("created_at", now);
+        task.put("last_updated_at", now);
+        return task;
+    }
+
+    /**
+     * Sinh ID bằng timestamp hiện tại (đơn giản, đủ dùng cho hệ thống nhỏ).
+     */
+    private String generateTaskId() {
+        return String.valueOf(System.currentTimeMillis());
+    }
+
+    /**
+     * Đọc dữ liệu nhiệm vụ từ file JSON.
+     */
+    private JSONArray loadTasksFromDb() {
+        JSONParser parser = new JSONParser();
+        try (FileReader reader = new FileReader(DB_FILE_PATH)) {
+            Object obj = parser.parse(reader);
+            if (obj instanceof JSONArray) {
+                return (JSONArray) obj;
+            }
+        } catch (IOException | ParseException e) {
+            System.err.println("Lỗi khi đọc file database: " + e.getMessage());
+        }
+        return new JSONArray();
+    }
+
+    /**
+     * Ghi danh sách nhiệm vụ vào file JSON.
+     */
+    private void saveTasksToDb(JSONArray tasksData) {
+        try (FileWriter file = new FileWriter(DB_FILE_PATH)) {
+            file.write(tasksData.toJSONString());
+            file.flush();
+        } catch (IOException e) {
+            System.err.println("Lỗi khi ghi file database: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Hàm main dùng để kiểm thử nhanh.
+     */
+    public static void main(String[] args) {
+        PersonalTaskManager manager = new PersonalTaskManager();
+        manager.addNewTask("Học KISS", "Đọc về nguyên tắc lập trình đơn giản", "2025-07-20", "Cao");
+        manager.addNewTask("Học DRY", "Tách hàm tránh trùng lặp", "2025-07-21", "Trung bình");
+    }
 }
